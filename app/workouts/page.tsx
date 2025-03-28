@@ -1,4 +1,4 @@
-import WorkoutsTable from "@/app/components/WorkoutsTable";
+import WorkoutsTable from "./WorkoutsTable";
 export default function Page() {
     return (
         <div>

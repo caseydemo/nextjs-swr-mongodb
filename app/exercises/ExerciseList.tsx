@@ -1,14 +1,6 @@
 "use client";
 import useSWR from "swr";
-
-async function fetcher(url: string) {
-	const res = await fetch(url);
-	if (!res.ok) {
-		const error = new Error("An error occurred while fetching the data.");
-		throw error;
-	}
-	return res.json();
-}
+import fetcher from "../lib/fetcher";
 
 export default function ExerciseList() {
 	const { data, error, isLoading } = useSWR("/api/exercises", fetcher);

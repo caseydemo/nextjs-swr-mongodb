@@ -1,4 +1,4 @@
-import ExerciseList from "../components/ExerciseList"
+import ExerciseList from "./ExerciseList"
 
 export default function Page() {
     return (

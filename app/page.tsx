@@ -1,6 +1,6 @@
 import Image from "next/image";
 import styles from "./page.module.css";
-import ExerciseList from "./components/ExerciseList";
+import ExerciseList from "./exercises/ExerciseList";
 
 export default function Home() {
 	

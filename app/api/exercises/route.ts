@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/app/lib/db";
-import Item from "@/app/models/Exercise";
+import Exercise from "@/app/models/Exercise";
 
 export async function GET() {
 	try {
 		await dbConnect();
-		const exercises = await Item.find({});
+		const exercises = await Exercise.find({});
 		return NextResponse.json({ exercises }, { status: 200 });
 	} catch (error) {
 		console.error(error);
