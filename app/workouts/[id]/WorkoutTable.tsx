@@ -5,15 +5,14 @@ import useWorkout from "@/app/hooks/useWorkout";
 import ExerciseGroupTable from "./ExerciseGroupTable";
 import WorkoutNotes from "./WorkoutNotes";
 import { useState } from "react";
+import { set } from "mongoose";
 
 export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	// fetch workout data using SWR hook
     const { data, error, isLoading } = useWorkout(workoutId);
 
     // create stateful variable for whether the row is being edited or not
-    // const [isEditing, setIsEditing] = useState(false);
-    // create stateful variable for whether the sub table is being edited or not
-	const [editRows, setEditRows] = useState<Record<string, boolean>>({})
+    const [editRows, setEditRows] = useState<Record<string, boolean>>({})
 
 	// handle loading and error states
 	if (isLoading) return <div>Loading...</div>;
@@ -29,11 +28,16 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	const exercises = workout.exercises;
 
     const handleEdit = (tableId: string) => {
-        console.log('Edit clicked for table:', tableId);
-        // setIsEditing(!isEditing);
         setEditRows((prevEditRows) => ({
             ...prevEditRows,
             [tableId]: !prevEditRows[tableId], // toggle the edit state for the specific table
+        }));
+    }
+
+    const handleSave = (tableId: string) => {
+        setEditRows((prevEditRows) => ({
+            ...prevEditRows,
+            [tableId]: false, // set the edit state to false for the specific table
         }));
     }
 
@@ -57,6 +61,7 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 						sets={exerciseGroup.sets}
                         isEditing={editRows[`exercise-group-${index}`] || false} // check if the specific table is in edit mode
                         handleEdit={handleEdit} // pass the handleEdit function to the ExerciseGroupTable
+                        handleSave={handleSave} // pass the handleSave function to the ExerciseGroupTable
 					/>
 				</div>
 			))}

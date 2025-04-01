@@ -7,7 +7,8 @@ export default function ExerciseGroupTable({
 	notes,
 	sets,
 	isEditing,
-	handleEdit
+	handleEdit,
+    handleSave,
 }: {
     tableKey: string;
 	title: string;
@@ -19,13 +20,9 @@ export default function ExerciseGroupTable({
 	}[];
 	isEditing: boolean;
 	handleEdit: (tableId: string) => void; // function to handle edit action
+    handleSave: (tableId: string) => void; // function to handle save action
 }) {
 	
-    const handleSave = () => {
-        console.log('Save clicked for table:', tableKey);
-        // handle save action here
-        handleEdit(tableKey); // toggle edit mode off after saving
-    }
 
 	return (
 		<div className='container'>
@@ -34,7 +31,7 @@ export default function ExerciseGroupTable({
 			
             <WorkoutExerciseNotes notes={notes} />
 
-            <ActionButton isEditing={isEditing} handleEdit={() => handleEdit(tableKey)} handleSave={handleSave} />
+            <ActionButton isEditing={isEditing} handleEdit={() => handleEdit(tableKey)} handleSave={() => handleSave(tableKey)} />
 			
             <table 
                 className='w-full border border-gray-300 mt-2'
