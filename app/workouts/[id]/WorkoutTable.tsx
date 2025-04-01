@@ -4,10 +4,14 @@
 import useWorkout from "@/app/hooks/useWorkout";
 import ExerciseGroupTable from "./ExerciseGroupTable";
 import WorkoutNotes from "./WorkoutNotes";
+import { useState } from "react";
 
 export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	// fetch workout data using SWR hook
     const { data, error, isLoading } = useWorkout(workoutId);
+
+    // create stateful variable for whether the row is being edited or not
+    const [isEditing, setIsEditing] = useState(false);
 
 	// handle loading and error states
 	if (isLoading) return <div>Loading...</div>;
@@ -39,6 +43,8 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 						title={exerciseGroup.name}
 						notes={exerciseGroup.notes}
 						sets={exerciseGroup.sets}
+                        isEditing={isEditing}
+                        setIsEditing={setIsEditing}
 					/>
 				</div>
 			))}
