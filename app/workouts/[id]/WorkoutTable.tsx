@@ -1,6 +1,5 @@
 "use client";
 
-
 import useWorkout from "@/app/hooks/useWorkout";
 import ExerciseGroupTable from "./ExerciseGroupTable";
 import WorkoutNotes from "./WorkoutNotes";
@@ -9,10 +8,10 @@ import { set } from "mongoose";
 
 export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	// fetch workout data using SWR hook
-    const { data, error, isLoading } = useWorkout(workoutId);
+	const { data, error, isLoading } = useWorkout(workoutId);
 
-    // create stateful variable for whether the row is being edited or not
-    const [editRows, setEditRows] = useState<Record<string, boolean>>({})
+	// create stateful variable for whether the row is being edited or not
+	const [editRows, setEditRows] = useState<Record<string, boolean>>({});
 
 	// handle loading and error states
 	if (isLoading) return <div>Loading...</div>;
@@ -27,19 +26,19 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 
 	const exercises = workout.exercises;
 
-    const handleEdit = (tableId: string) => {
-        setEditRows((prevEditRows) => ({
-            ...prevEditRows,
-            [tableId]: !prevEditRows[tableId], // toggle the edit state for the specific table
-        }));
-    }
+	const handleEdit = (tableId: string) => {
+		setEditRows((prevEditRows) => ({
+			...prevEditRows,
+			[tableId]: !prevEditRows[tableId], // toggle the edit state for the specific table
+		}));
+	};
 
-    const handleSave = (tableId: string) => {
-        setEditRows((prevEditRows) => ({
-            ...prevEditRows,
-            [tableId]: false, // set the edit state to false for the specific table
-        }));
-    }
+	const handleSave = (tableId: string) => {
+		setEditRows((prevEditRows) => ({
+			...prevEditRows,
+			[tableId]: false, // set the edit state to false for the specific table
+		}));
+	};
 
 	return (
 		<>
@@ -51,17 +50,17 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 			{/* loop over exercises, create a seperate table for each exercise group */}
 			{exercises.map((exerciseGroup: any, index: number) => (
 				<div
-					key={`exercise-group-index-` + index}
+					key={`exercise-group-${index}`}
 					className='mt-4'
 				>
 					<ExerciseGroupTable
-                        tableKey={`exercise-group-${index}`} // unique key for each sub table - used to identify the table in the DOM
+						tableKey={`exercise-group-${index}`} // unique key for each sub table - used to identify the table in the DOM
 						title={exerciseGroup.name}
 						notes={exerciseGroup.notes}
 						sets={exerciseGroup.sets}
-                        isEditing={editRows[`exercise-group-${index}`] || false} // check if the specific table is in edit mode
-                        handleEdit={handleEdit} // pass the handleEdit function to the ExerciseGroupTable
-                        handleSave={handleSave} // pass the handleSave function to the ExerciseGroupTable
+						isEditing={editRows[`exercise-group-${index}`] || false} // check if the specific table is in edit mode
+						handleEdit={handleEdit}
+						handleSave={handleSave}
 					/>
 				</div>
 			))}
