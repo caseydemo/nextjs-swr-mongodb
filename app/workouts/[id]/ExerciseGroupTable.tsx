@@ -1,94 +1,91 @@
-import { set } from "mongoose";
 import WorkoutExerciseNotes from "./WorkoutExerciseNotes";
-
-
+import ActionButton from "./ActionButton";
 
 export default function ExerciseGroupTable({
+    tableKey,
 	title,
 	notes,
-    sets,
-    isEditing,
-    setIsEditing
+	sets,
+	isEditing,
+	handleEdit
 }: {
+    tableKey: string;
 	title: string;
 	notes: string;
-    sets: {
-        weight: number;
-        reps: number;
-        notes: string;
-    }[],
-    isEditing: boolean;
-    setIsEditing: (isEditing: boolean) => void;
+	sets: {
+		weight: number;
+		reps: number;
+		notes: string;
+	}[];
+	isEditing: boolean;
+	handleEdit: (tableId: string) => void; // function to handle edit action
 }) {
-
-    const handleEdit = () => {
-        setIsEditing(!isEditing);    
-    }
-
+	
     const handleSave = () => {
-        console.log('this is the save function');
+        console.log('Save clicked for table:', tableKey);
+        // handle save action here
+        handleEdit(tableKey); // toggle edit mode off after saving
     }
 
 	return (
 		<div className='container'>
-			<p>{title}</p>            
-			<WorkoutExerciseNotes notes={notes} />
-            <table className='w-full border border-gray-300 mt-2'>
+			
+            <p>{title}</p>
+			
+            <WorkoutExerciseNotes notes={notes} />
+
+            <ActionButton isEditing={isEditing} handleEdit={() => handleEdit(tableKey)} handleSave={handleSave} />
+			
+            <table 
+                className='w-full border border-gray-300 mt-2'
+                id={`exercise-group-table-${title}`}
+                >
 				<thead>
 					<tr className='bg-gray-100'>
 						<th className='border px-4 py-2'>Set</th>
 						<th className='border px-4 py-2'>Weight</th>
 						<th className='border px-4 py-2'>Reps</th>
 						<th className='border px-4 py-2'>Notes</th>
-                        <th className='border px-4 py-2'>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					{sets.map((set: any, setIndex: number) => (
-                        <tr key={setIndex}>
-                            <td className='border px-4 py-2'>{setIndex + 1}</td>
-                            <td className='border px-4 py-2'>
-                                {isEditing ? (
-                                    <input
-                                        type="number"
-                                        defaultValue={set.weight}
-                                        className="w-full border px-2 py-1"
-                                    />
-                                ) : (
-                                    set.weight
-                                )}
-                            </td>
-                            <td className='border px-4 py-2'>
-                                {isEditing ? (
-                                    <input
-                                        type="number"
-                                        defaultValue={set.reps}
-                                        className="w-full border px-2 py-1"
-                                    />
-                                ) : (
-                                    set.reps
-                                )}
-                            </td>
-                            <td className='border px-4 py-2'>
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        defaultValue={set.notes}
-                                        className="w-full border px-2 py-1"
-                                    />
-                                ) : (
-                                    set.notes
-                                )}
-                            </td>
-                            {/* actions column, if isEditing this is 'save' else 'edit' */}
-                            <td className='border px-4 py-2'>
-                                {isEditing ? (
-                                    <button className="btn btn-success" onClick={handleSave} >Save</button>
-                                ) : (
-                                    <button className="btn btn-primary" onClick={handleEdit} >Edit</button>
-                                )}
-                            </td>
-                        </tr>						
+						<tr key={setIndex}>
+							<td className='border px-4 py-2'>{setIndex + 1}</td>
+							<td className='border px-4 py-2'>
+								{isEditing ? (
+									<input
+										type='number'
+										defaultValue={set.weight}
+										className='w-full border px-2 py-1'
+									/>
+								) : (
+									set.weight
+								)}
+							</td>
+							<td className='border px-4 py-2'>
+								{isEditing ? (
+									<input
+										type='number'
+										defaultValue={set.reps}
+										className='w-full border px-2 py-1'
+									/>
+								) : (
+									set.reps
+								)}
+							</td>
+							<td className='border px-4 py-2'>
+								{isEditing ? (
+									<input
+										type='text'
+										defaultValue={set.notes}
+										className='w-full border px-2 py-1'
+									/>
+								) : (
+									set.notes
+								)}
+							</td>							
+						</tr>
 					))}
 				</tbody>
 			</table>

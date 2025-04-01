@@ -11,7 +11,9 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
     const { data, error, isLoading } = useWorkout(workoutId);
 
     // create stateful variable for whether the row is being edited or not
-    const [isEditing, setIsEditing] = useState(false);
+    // const [isEditing, setIsEditing] = useState(false);
+    // create stateful variable for whether the sub table is being edited or not
+	const [editRows, setEditRows] = useState<Record<string, boolean>>({})
 
 	// handle loading and error states
 	if (isLoading) return <div>Loading...</div>;
@@ -25,6 +27,15 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	}
 
 	const exercises = workout.exercises;
+
+    const handleEdit = (tableId: string) => {
+        console.log('Edit clicked for table:', tableId);
+        // setIsEditing(!isEditing);
+        setEditRows((prevEditRows) => ({
+            ...prevEditRows,
+            [tableId]: !prevEditRows[tableId], // toggle the edit state for the specific table
+        }));
+    }
 
 	return (
 		<>
@@ -40,11 +51,12 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 					className='mt-4'
 				>
 					<ExerciseGroupTable
+                        tableKey={`exercise-group-${index}`} // unique key for each sub table - used to identify the table in the DOM
 						title={exerciseGroup.name}
 						notes={exerciseGroup.notes}
 						sets={exerciseGroup.sets}
-                        isEditing={isEditing}
-                        setIsEditing={setIsEditing}
+                        isEditing={editRows[`exercise-group-${index}`] || false} // check if the specific table is in edit mode
+                        handleEdit={handleEdit} // pass the handleEdit function to the ExerciseGroupTable
 					/>
 				</div>
 			))}
