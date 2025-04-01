@@ -1,15 +1,13 @@
 "use client";
-import useSWR from "swr";
-import fetcher from "@/app/lib/fetcher";
+
+
+import useWorkout from "@/app/hooks/useWorkout";
 import ExerciseGroupTable from "./ExerciseGroupTable";
 import WorkoutNotes from "./WorkoutNotes";
 
 export default function WorkoutTable({ workoutId }: { workoutId: string }) {
-	// fetch the workout data using swr
-	const { data, error, isLoading } = useSWR(
-		`/api/workouts?workoutId=${workoutId}`,
-		(url: string) => fetcher(url)
-	);
+	// fetch workout data using SWR hook
+    const { data, error, isLoading } = useWorkout(workoutId);
 
 	// handle loading and error states
 	if (isLoading) return <div>Loading...</div>;
