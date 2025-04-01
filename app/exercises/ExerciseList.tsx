@@ -1,9 +1,10 @@
 "use client";
-import useSWR from "swr";
-import fetcher from "../lib/fetcher";
+import useExercise from "../hooks/useExercise";
 
 export default function ExerciseList() {
-	const { data, error, isLoading } = useSWR("/api/exercises", fetcher);
+
+    // fetch exercise data using SWR hook
+    const { data, error, isLoading } = useExercise("exerciseId");
 
 	if (isLoading) return <div>Loading...</div>;
 	if (error) return <div>Failed to load items</div>;
