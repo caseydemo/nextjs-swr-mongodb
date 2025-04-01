@@ -22,15 +22,16 @@ export default function ExerciseGroupTable({
 }) {
 
     const handleEdit = () => {
-        // Handle the edit button click
-        console.log("Edit button clicked");
         setIsEditing(!isEditing);    
+    }
+
+    const handleSave = () => {
+        console.log('this is the save function');
     }
 
 	return (
 		<div className='container'>
-			<p>{title}</p>
-            <button className="btn btn-primary" onClick={handleEdit}>Edit</button>
+			<p>{title}</p>            
 			<WorkoutExerciseNotes notes={notes} />
             <table className='w-full border border-gray-300 mt-2'>
 				<thead>
@@ -39,6 +40,7 @@ export default function ExerciseGroupTable({
 						<th className='border px-4 py-2'>Weight</th>
 						<th className='border px-4 py-2'>Reps</th>
 						<th className='border px-4 py-2'>Notes</th>
+                        <th className='border px-4 py-2'>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -76,6 +78,14 @@ export default function ExerciseGroupTable({
                                     />
                                 ) : (
                                     set.notes
+                                )}
+                            </td>
+                            {/* actions column, if isEditing this is 'save' else 'edit' */}
+                            <td className='border px-4 py-2'>
+                                {isEditing ? (
+                                    <button className="btn btn-success" onClick={handleSave} >Save</button>
+                                ) : (
+                                    <button className="btn btn-primary" onClick={handleEdit} >Edit</button>
                                 )}
                             </td>
                         </tr>						
