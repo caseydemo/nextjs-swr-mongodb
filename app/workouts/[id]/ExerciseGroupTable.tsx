@@ -32,6 +32,8 @@ export default function ExerciseGroupTable({
             <WorkoutExerciseNotes notes={notes} />
 
             <ActionButton isEditing={isEditing} handleEdit={() => handleEdit(tableKey)} handleSave={() => handleSave(tableKey)} />
+
+            {/* next step is to figure out how to send the workout object in the handleSave function */}
 			
             <table 
                 className='w-full border border-gray-300 mt-2'

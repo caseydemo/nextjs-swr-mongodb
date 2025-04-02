@@ -34,6 +34,10 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	};
 
 	const handleSave = (tableId: string) => {
+
+        // mutage the data with a PUT request to the server
+
+
 		setEditRows((prevEditRows) => ({
 			...prevEditRows,
 			[tableId]: false, // set the edit state to false for the specific table
