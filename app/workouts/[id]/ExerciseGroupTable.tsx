@@ -1,5 +1,6 @@
 import WorkoutExerciseNotes from "./WorkoutExerciseNotes";
 import ActionButton from "./ActionButton";
+import styles from "./styles/exercise-group-table.module.css";
 
 export default function ExerciseGroupTable({
     tableKey,
@@ -9,6 +10,7 @@ export default function ExerciseGroupTable({
 	isEditing,
 	handleEdit,
     handleSave,
+    handleInputChange,
 }: {
     tableKey: string;
 	title: string;
@@ -19,19 +21,19 @@ export default function ExerciseGroupTable({
 		notes: string;
 	}[];
 	isEditing: boolean;
-	handleEdit: (tableId: string) => void; // function to handle edit action
-    handleSave: (tableId: string) => void; // function to handle save action
-}) {
-	
+	handleEdit: (tableId: string, data: any) => void;
+    handleSave: (tableId: string) => void;
+    handleInputChange: (e: React.ChangeEvent<HTMLInputElement>, setIndex: number, field: string) => void;
+}) {    
 
 	return (
-		<div className='container'>
+		<div className={`container ${styles.exercise_group_table}`}>
 			
             <p>{title}</p>
 			
             <WorkoutExerciseNotes notes={notes} />
 
-            <ActionButton isEditing={isEditing} handleEdit={() => handleEdit(tableKey)} handleSave={() => handleSave(tableKey)} />
+            <ActionButton isEditing={isEditing} handleEdit={() => handleEdit(tableKey, sets)} handleSave={() => handleSave(tableKey)} />
 
             {/* next step is to figure out how to send the workout object in the handleSave function */}
 			
@@ -79,6 +81,7 @@ export default function ExerciseGroupTable({
 										type='text'
 										defaultValue={set.notes}
 										className='w-full border px-2 py-1'
+                                        onChange={(e) => handleInputChange(e, setIndex, 'notes')}
 									/>
 								) : (
 									set.notes
