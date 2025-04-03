@@ -4,6 +4,7 @@ import useWorkout from "@/app/hooks/useWorkout";
 import ExerciseGroupTable from "./ExerciseGroupTable";
 import WorkoutNotes from "./WorkoutNotes";
 import { useState } from "react";
+import { table } from "console";
 
 export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	// fetch workout data using SWR hook
@@ -33,12 +34,24 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 		return <div>Failed to process workout exercises</div>;
 	}
 
-	const toggleEdit = (tableId: string) => {
-		
-        setEditRows((prevEditRows) => ({
+    // give this a second param that takes formData but it's optional
+    // this is the function that will be called when the form is submitted
+	const toggleEdit = (tableId: string, formData?: FormData) => {
+		setEditRows((prevEditRows) => ({
 			...prevEditRows,
 			[tableId]: !prevEditRows[tableId], // toggle the edit state for the specific table
 		}));
+
+        // if formData is passed, set the formData state
+        if (formData) {
+            const formDataObj = Object.fromEntries(formData.entries());
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                ...formDataObj,
+            }));
+            console.log('formDataObj', formDataObj);
+        }
+
 
 	};
 
@@ -57,7 +70,8 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 				>
 					<ExerciseGroupTable
 						tableKey={`exercise-group-${index}`} // unique key for each sub table - used to identify the table in the DOM
-						title={exerciseGroup.name}
+						workoutId={workoutId}
+                        title={exerciseGroup.name}
 						notes={exerciseGroup.notes}
 						sets={exerciseGroup.sets}
 						isEditing={editRows[`exercise-group-${index}`] || false} // check if the specific table is in edit mode

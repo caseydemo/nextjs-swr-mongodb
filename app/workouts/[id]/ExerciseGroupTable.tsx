@@ -3,10 +3,23 @@ import WorkoutExerciseNotes from "./WorkoutExerciseNotes";
 import ActionButton from "./ActionButton";
 import styles from "./styles/exercise-group-table.module.css";
 import { useReducer } from "react";
-import submitForm from "@/app/actions/submit-form";
+import { updateWorkoutExerciseGroup } from "@/app/actions/workout";
+
+
+interface ParsedFormData {
+	[index: string]: {
+		[fieldName: string]: string | File;
+	};
+}
+
+interface ReturnData {
+    parsedFormData: ParsedFormData;
+    tableIndex: string;
+}
 
 export default function ExerciseGroupTable({
 	tableKey,
+    workoutId,
 	title,
 	notes,
 	sets,
@@ -14,6 +27,7 @@ export default function ExerciseGroupTable({
 	toggleEdit,
 }: {
 	tableKey: string;
+    workoutId: string;
 	title: string;
 	notes: string;
 	sets: {
@@ -30,34 +44,67 @@ export default function ExerciseGroupTable({
 		{}
 	);
 
-	async function handleFormSubmit(formData: FormData) {
-
-        const formDataObj = Object.fromEntries(formData.entries());
-        
-        // create an array to hold the sets
-        const setsArray = [];
-
-
-        // loop over this, dawg
-        for (const key in formDataObj) {
-
-            // add sets to setsArray like this:
-            // [index]: { weight: 0, reps: 0, notes: "" }
-            const [index, field] = key.split("-");
-            const setIndex = parseInt(index);
-            const fieldName = field as "weight" | "reps" | "notes";
-            const fieldValue = formDataObj[key];
-            // check if the setIndex exists in setsArray, if not create it
-            if (!setsArray[setIndex]) {
-                setsArray[setIndex] = { weight: 0, reps: 0, notes: "" };
-            }
-            
-            console.log('')
-
-            console.log(key, formDataObj[key]);
+	const parseFormData = (formData: FormData): ReturnData | null => {
+		
+        let parsedFormData: ParsedFormData = {};
+        if (!formData) {
+            console.error("Form data is not defined");
+            return null;
         }
-        
 
+        // tableIndex is the index portion of tableKey - it is always at the end prepended with a dash
+        if(!tableKey) {
+            console.error("tableKey is not defined");
+            return null;
+        }
+        // force this to be a number
+        const tableIndex = tableKey.split("-").pop() as string;
+        if (!tableIndex) {
+            console.error("tableIndex is not defined");
+            return null;
+        }
+
+		formData.forEach((value, key) => {
+			if (!key.includes("-")) {
+                return; // skip keys that don't have a dash
+            }
+            const [index, fieldName] = key.split("-");
+			if (!parsedFormData[index]) {
+				parsedFormData[index] = {};
+			}
+            parsedFormData[index][fieldName] = value;
+		});
+
+        // combine all the parsed data into a single object
+        const returnData: ReturnData = {
+            parsedFormData,
+            tableIndex,
+        };        
+
+		return returnData;
+	};
+
+    // this is called when the form is submitted
+	async function handleFormSubmit(formData: FormData) {
+		
+		const parsedData = parseFormData(formData);
+		if (!parsedData) {
+			console.error("Failed to parse form data");
+			return;
+		}
+		const { parsedFormData, tableIndex } = parsedData;
+
+        console.log('parsedFormData', parsedFormData);
+        console.log('tableIndex', tableIndex);
+        console.log('workoutId', workoutId);
+        
+        // send the data to the server
+        const response = await updateWorkoutExerciseGroup(
+            workoutId,
+            tableIndex,
+            parsedFormData
+        );
+		
 	}
 
 	const handleInputChange = (
@@ -66,6 +113,7 @@ export default function ExerciseGroupTable({
 		field: string
 	) => {
 		const newValue = e.target.value;
+		console.log("newValue", newValue);
 		setFormData({
 			[`${tableKey}-${setIndex}-${field}`]: newValue,
 		});
@@ -86,6 +134,7 @@ export default function ExerciseGroupTable({
 						isEditing={isEditing}
 						toggleEdit={() => toggleEdit(tableKey)}
 					/>
+                    <input type="hidden" name="tableKey" value={tableKey} />
 					<table
 						className='w-full border border-gray-300 mt-2'
 						id={`exercise-group-table-${title}`}
@@ -153,22 +202,22 @@ export default function ExerciseGroupTable({
 										/>
 									</td>
 								</tr>
-							))}
+							))}							
 						</tbody>
 					</table>
-                    
-					{/* <button
+
+					<button
 						className='bg-blue-500 text-white px-4 py-2 rounded mt-2'
 						type='submit'
 					>
 						Submit
-					</button> */}
+					</button>
 				</form>
 			) : (
 				<>
 					<ActionButton
 						isEditing={isEditing}
-						toggleEdit={() => toggleEdit(tableKey)}						
+						toggleEdit={() => toggleEdit(tableKey)}
 					/>
 
 					<table
