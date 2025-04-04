@@ -2,8 +2,9 @@
 import WorkoutExerciseNotes from "./WorkoutExerciseNotes";
 import ActionButton from "./ActionButton";
 import styles from "../styles/exercise-group-table.module.css";
-import { useReducer } from "react";
-import useSWR, { useSWRConfig } from "swr";
+import parseFormData from "@/app/lib/parseFormData";
+import { useSWRConfig } from 'swr';
+
 
 
 export default function ExerciseGroupTable({
@@ -27,113 +28,65 @@ export default function ExerciseGroupTable({
 	isEditing: boolean;
 	toggleEdit: (tableId: string) => void;
 }) {
-	// stateful variable for form data
-	const [formData, setFormData] = useReducer(
-		(state: any, newState: any) => ({ ...state, ...newState }),
-		{}
-	);
 
-	const parseFormData = (formData: FormData): any => {
-		if (!formData) {
-			console.error("Form data is not defined");
-			return null;
-		}
+	const { mutate } = useSWRConfig();
+	const revalidationKey = `/api/workouts?workoutId=${workoutId}`;
 
-		// exerciseGroupId is the index portion of tableKey - it is always at the end prepended with a dash
-		if (!tableKey) {
-			console.error("tableKey is not defined");
-			return null;
-		}
-		// force this to be a number
-		const exerciseGroupId = tableKey.split("-").pop() as string;
-		if (!exerciseGroupId) {
-			console.error("exerciseGroupId is not defined");
-			return null;
-		}
-
-		let setsArray: any[] = [];
-        let tempObj: any = {};
-		formData.forEach((value, key) => {
-			if (!key.includes("-")) {
-				return; // skip keys that don't have a dash
-			}
-			const [index, fieldName] = key.split("-");
-			const idx = parseInt(index, 10);
-			if (!setsArray[idx]) {
-				setsArray[idx] = {};
-			}
-            
-            // add a property with key of fieldName and value of value to the object at index idx
-            tempObj = {
-                ...tempObj,
-                [fieldName]: value,
-            }
-            // add the object to the array at index idx
-            setsArray[idx] = {
-                ...setsArray[idx],
-                [fieldName]: value,
-            };
-                        
-
-		});
-
-		// combine all the parsed data into a single object
-		const returnData: any = {
-			setsArray,
-			exerciseGroupId,
-		};
-
-        return returnData;
-	};
-
-	// this is called when the form is submitted
 	async function handleFormSubmit(formData: FormData) {
-		const parsedData = parseFormData(formData);
+
+
+		// because the formData is in a weird unusable format by default, I need to parse it with my own logic
+		const parsedData = parseFormData(formData, tableKey);
         if (!parsedData) {
 			console.error("Failed to parse form data");
 			return;
 		}
+
+
+		// we receive back two values: setsArray and exerciseGroupId
 		const { setsArray, exerciseGroupId } = parsedData;
 
-        console.log('setsArray', setsArray);        
-
-		// console.log('setsArray', setsArray);
-		// console.log('exerciseGroupId', exerciseGroupId);
-		// console.log('workoutId', workoutId);
-
-		// combine all three values into a single object and send as the body of the request
-
+		// combine all three in an object to be sent off to the update endpoint
 		const combinedData = {
 			workoutId,
 			exerciseGroupId,
 			setsArray,
-		};        
+		};
 
-		// make this json
-		const jsonData = JSON.stringify(combinedData);
 
-		// update the db via the api route - and use swr mutate to update the cache
-		// put request to /api/workouts/${workoutId}/exercise-groups/${exerciseGroupId}
+		// optimistically load the new data?
+		try {
+
+            // Optimistically update the data (optional)
+            // mutate('/api/workouts', (cacheData: any) => {
+            //     // Update the cacheData based on newData
+            //     return updatedCacheData;
+            // }, false); // Prevent revalidation
+
+			mutate(revalidationKey)
+
+		} catch (error) {
+            // Handle error and revert the optimistic update if necessary
+            mutate(revalidationKey)
+        }
+
+		// call the update endpoint
 		const response = await fetch(`/api/workouts`, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: jsonData,
+			body: JSON.stringify(combinedData)
 		});
-		if (!response.ok) {
-			console.error("Failed to update exercise group");
-			return;
+		if (response.ok) {
+			// Revalidate the data
+			console.log('telling all swrs to revalidate with this key')
+			mutate(revalidationKey);
+		} else {
+		   // Handle error and revert the optimistic update if necessary
+		   mutate(revalidationKey)
 		}
-		const data = await response.json();
 
-		if (!data) {
-            console.error("Failed to update exercise group");
-            return;
-        }
-
-        
-		
 	}
 
 	return (
@@ -141,8 +94,6 @@ export default function ExerciseGroupTable({
 			<p>{title}</p>
 
 			<WorkoutExerciseNotes notes={notes} />
-
-			{/* next step is to figure out how to send the workout object in the handleSave function */}
 
 			{isEditing ? (
 				<form action={handleFormSubmit}>
