@@ -6,20 +6,9 @@ import { useReducer } from "react";
 import useSWR, { useSWRConfig } from "swr";
 
 
-interface ParsedFormData {
-	[index: string]: {
-		[fieldName: string]: string | File;
-	};
-}
-
-interface ReturnData {
-    parsedFormData: ParsedFormData;
-    exerciseGroupId: string;
-}
-
 export default function ExerciseGroupTable({
 	tableKey,
-    workoutId,
+	workoutId,
 	title,
 	notes,
 	sets,
@@ -27,7 +16,7 @@ export default function ExerciseGroupTable({
 	toggleEdit,
 }: {
 	tableKey: string;
-    workoutId: string;
+	workoutId: string;
 	title: string;
 	notes: string;
 	sets: {
@@ -44,105 +33,108 @@ export default function ExerciseGroupTable({
 		{}
 	);
 
-	const parseFormData = (formData: FormData): ReturnData | null => {
-		
-        let parsedFormData: ParsedFormData = {};
-        if (!formData) {
-            console.error("Form data is not defined");
-            return null;
-        }
+	const parseFormData = (formData: FormData): any => {
+		if (!formData) {
+			console.error("Form data is not defined");
+			return null;
+		}
 
-        // exerciseGroupId is the index portion of tableKey - it is always at the end prepended with a dash
-        if(!tableKey) {
-            console.error("tableKey is not defined");
-            return null;
-        }
-        // force this to be a number
-        const exerciseGroupId = tableKey.split("-").pop() as string;
-        if (!exerciseGroupId) {
-            console.error("exerciseGroupId is not defined");
-            return null;
-        }
+		// exerciseGroupId is the index portion of tableKey - it is always at the end prepended with a dash
+		if (!tableKey) {
+			console.error("tableKey is not defined");
+			return null;
+		}
+		// force this to be a number
+		const exerciseGroupId = tableKey.split("-").pop() as string;
+		if (!exerciseGroupId) {
+			console.error("exerciseGroupId is not defined");
+			return null;
+		}
 
+		let setsArray: any[] = [];
+        let tempObj: any = {};
 		formData.forEach((value, key) => {
 			if (!key.includes("-")) {
-                return; // skip keys that don't have a dash
-            }
-            const [index, fieldName] = key.split("-");
-			if (!parsedFormData[index]) {
-				parsedFormData[index] = {};
+				return; // skip keys that don't have a dash
 			}
-            parsedFormData[index][fieldName] = value;
+			const [index, fieldName] = key.split("-");
+			const idx = parseInt(index, 10);
+			if (!setsArray[idx]) {
+				setsArray[idx] = {};
+			}
+            
+            // add a property with key of fieldName and value of value to the object at index idx
+            tempObj = {
+                ...tempObj,
+                [fieldName]: value,
+            }
+            // add the object to the array at index idx
+            setsArray[idx] = {
+                ...setsArray[idx],
+                [fieldName]: value,
+            };
+                        
+
 		});
 
-        // combine all the parsed data into a single object
-        const returnData: ReturnData = {
-            parsedFormData,
-            exerciseGroupId,
-        };        
+		// combine all the parsed data into a single object
+		const returnData: any = {
+			setsArray,
+			exerciseGroupId,
+		};
 
-		return returnData;
+        return returnData;
 	};
 
-    // this is called when the form is submitted
-	async function handleFormSubmit(formData: FormData) {        
-		
+	// this is called when the form is submitted
+	async function handleFormSubmit(formData: FormData) {
 		const parsedData = parseFormData(formData);
-		if (!parsedData) {
+        if (!parsedData) {
 			console.error("Failed to parse form data");
 			return;
 		}
-		const { parsedFormData, exerciseGroupId } = parsedData;
+		const { setsArray, exerciseGroupId } = parsedData;
 
-        // console.log('parsedFormData', parsedFormData);
-        // console.log('exerciseGroupId', exerciseGroupId);
-        // console.log('workoutId', workoutId);
+        console.log('setsArray', setsArray);        
 
-        // combine all three values into a single object and send as the body of the request
-        
-        const combinedData = {
-            workoutId,
-            exerciseGroupId,
-            ...parsedFormData,
-        };
+		// console.log('setsArray', setsArray);
+		// console.log('exerciseGroupId', exerciseGroupId);
+		// console.log('workoutId', workoutId);
 
-        // make this json
-        const jsonData = JSON.stringify(combinedData);
+		// combine all three values into a single object and send as the body of the request
 
+		const combinedData = {
+			workoutId,
+			exerciseGroupId,
+			setsArray,
+		};        
 
-        // update the db via the api route - and use swr mutate to update the cache
-        // put request to /api/workouts/${workoutId}/exercise-groups/${exerciseGroupId}
-        const response = await fetch(
-            `/api/workouts`,
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: jsonData,
-            }
-        );
-        if (!response.ok) {
+		// make this json
+		const jsonData = JSON.stringify(combinedData);
+
+		// update the db via the api route - and use swr mutate to update the cache
+		// put request to /api/workouts/${workoutId}/exercise-groups/${exerciseGroupId}
+		const response = await fetch(`/api/workouts`, {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: jsonData,
+		});
+		if (!response.ok) {
+			console.error("Failed to update exercise group");
+			return;
+		}
+		const data = await response.json();
+
+		if (!data) {
             console.error("Failed to update exercise group");
             return;
         }
-        const data = await response.json();
-        console.log("Exercise group updated", data);
-        
-        // use swr to revalidate the data
-        // const { mutate } = useSWRConfig();
-        
-        // revalidate the workout data
-        // mutate(`/api/workouts/${workoutId}`);
-        
-        // revalidate the exercise group data
-        // mutate(`/api/workouts/${workoutId}/exercise-groups/${exerciseGroupId}`);
-        
 
         
+		
 	}
-
-	
 
 	return (
 		<div className={`container ${styles.exercise_group_table}`}>
@@ -158,7 +150,11 @@ export default function ExerciseGroupTable({
 						isEditing={isEditing}
 						toggleEdit={() => toggleEdit(tableKey)}
 					/>
-                    <input type="hidden" name="tableKey" value={tableKey} />
+					<input
+						type='hidden'
+						name='tableKey'
+						value={tableKey}
+					/>
 					<table
 						className='w-full border border-gray-300 mt-2'
 						id={`exercise-group-table-${title}`}
@@ -183,7 +179,7 @@ export default function ExerciseGroupTable({
 											// name="weight"
 											name={`${setIndex}-weight`}
 											defaultValue={set.weight}
-											className='w-full border px-2 py-1'											
+											className='w-full border px-2 py-1'
 										/>
 									</td>
 									<td className='border px-4 py-2'>
@@ -192,7 +188,7 @@ export default function ExerciseGroupTable({
 											// name="reps"
 											name={`${setIndex}-reps`}
 											defaultValue={set.reps}
-											className='w-full border px-2 py-1'											
+											className='w-full border px-2 py-1'
 										/>
 									</td>
 									<td className='border px-4 py-2'>
@@ -201,11 +197,11 @@ export default function ExerciseGroupTable({
 											// name="notes"
 											name={`${setIndex}-notes`}
 											defaultValue={set.notes}
-											className='w-full border px-2 py-1'											
+											className='w-full border px-2 py-1'
 										/>
 									</td>
 								</tr>
-							))}							
+							))}
 						</tbody>
 					</table>
 
