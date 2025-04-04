@@ -37,3 +37,72 @@ export async function GET(request: Request) {
 	}
 }
 
+// PUT request to update a workout
+// the request body contains the updated data for the exercise group
+// the parameter is a single json object with the following properties: 
+// workoutId, exerciseGroupId, and the updated data for the exercise group
+export async function PUT(request: Request) {
+
+    try {
+        
+        // pull out the parts of the body
+        const params = await request.json();
+        
+        // should be three things: workoutId, exerciseGroupId, and the updated data for the exercise group
+        const { workoutId, exerciseGroupId, ...updatedData } = params;
+        // all three need to be there, throw a fit if they aint
+        if (!workoutId || !exerciseGroupId || !updatedData) {
+            return NextResponse.json(
+                { message: "Missing required fields" },
+                { status: 400 }
+            );
+        }
+        
+        await dbConnect();        
+
+        // find the workout by the field called workoutId
+        // const workout = await Workout.findOne({ workoutId });
+        const workout = await Workout.findOne({ workoutId: workoutId });
+        if (!workout) {
+            return NextResponse.json(
+                { message: "Workout not found" },
+                { status: 404 }
+            );
+        }
+
+
+        // find the exercise group's sets array - this is an array of objects
+        // it will look like this:
+        // workout.exercises[exerciseGroupId].sets
+        // updatedData will replace the entire .sets array, so we need to find the exercise group first
+        const exerciseGroupSets = workout.exercises[exerciseGroupId]?.sets;
+        if (!exerciseGroupSets) {        
+            return NextResponse.json(
+                { message: "Exercise group sets array not found" },
+                { status: 404 }
+            );
+        }
+        // update the exercise group's sets array with the updated data
+        // this will replace the entire sets array with the updated data
+        workout.exercises[exerciseGroupId].sets = updatedData;
+
+        // Mark the exercises array as modified
+        workout.markModified(`exercises.${exerciseGroupId}.sets`);
+
+        // ok... now that we have the data all set we need to save the workout
+        // this updates the db, we will also need to update the cache in the frontend
+        
+        await workout.save();
+        
+        console.log('entire workout object that was saved', workout.exercises[exerciseGroupId]);
+
+        return NextResponse.json({ message: "Exercise group updated" }, { status: 200 });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+            { message: "Error updating exercise group" },
+            { status: 500 }
+        );
+    }
+}
+

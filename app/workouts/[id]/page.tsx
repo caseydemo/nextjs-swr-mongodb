@@ -1,5 +1,5 @@
 // take the id from the url and use it to fetch the workout
-import WorkoutTable from "./WorkoutTable";
+import WorkoutTable from "./components/WorkoutTable";
 
 export default async function WorkoutPage({ params }: { params: { id: string } }) {
     const { id } = await params;

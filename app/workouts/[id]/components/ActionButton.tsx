@@ -1,5 +1,5 @@
 "use client";
-import styles from "./styles/action-button.module.css";
+import styles from "../styles/action-button.module.css";
 export default function ActionButton({
 	isEditing,
 	toggleEdit,    

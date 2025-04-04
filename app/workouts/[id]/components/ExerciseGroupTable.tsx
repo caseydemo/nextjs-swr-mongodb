@@ -1,9 +1,9 @@
 "use client";
 import WorkoutExerciseNotes from "./WorkoutExerciseNotes";
 import ActionButton from "./ActionButton";
-import styles from "./styles/exercise-group-table.module.css";
+import styles from "../styles/exercise-group-table.module.css";
 import { useReducer } from "react";
-import { updateWorkoutExerciseGroup } from "@/app/actions/workout";
+import useSWR, { useSWRConfig } from "swr";
 
 
 interface ParsedFormData {
@@ -14,7 +14,7 @@ interface ParsedFormData {
 
 interface ReturnData {
     parsedFormData: ParsedFormData;
-    tableIndex: string;
+    exerciseGroupId: string;
 }
 
 export default function ExerciseGroupTable({
@@ -52,15 +52,15 @@ export default function ExerciseGroupTable({
             return null;
         }
 
-        // tableIndex is the index portion of tableKey - it is always at the end prepended with a dash
+        // exerciseGroupId is the index portion of tableKey - it is always at the end prepended with a dash
         if(!tableKey) {
             console.error("tableKey is not defined");
             return null;
         }
         // force this to be a number
-        const tableIndex = tableKey.split("-").pop() as string;
-        if (!tableIndex) {
-            console.error("tableIndex is not defined");
+        const exerciseGroupId = tableKey.split("-").pop() as string;
+        if (!exerciseGroupId) {
+            console.error("exerciseGroupId is not defined");
             return null;
         }
 
@@ -78,47 +78,71 @@ export default function ExerciseGroupTable({
         // combine all the parsed data into a single object
         const returnData: ReturnData = {
             parsedFormData,
-            tableIndex,
+            exerciseGroupId,
         };        
 
 		return returnData;
 	};
 
     // this is called when the form is submitted
-	async function handleFormSubmit(formData: FormData) {
+	async function handleFormSubmit(formData: FormData) {        
 		
 		const parsedData = parseFormData(formData);
 		if (!parsedData) {
 			console.error("Failed to parse form data");
 			return;
 		}
-		const { parsedFormData, tableIndex } = parsedData;
+		const { parsedFormData, exerciseGroupId } = parsedData;
 
-        console.log('parsedFormData', parsedFormData);
-        console.log('tableIndex', tableIndex);
-        console.log('workoutId', workoutId);
+        // console.log('parsedFormData', parsedFormData);
+        // console.log('exerciseGroupId', exerciseGroupId);
+        // console.log('workoutId', workoutId);
+
+        // combine all three values into a single object and send as the body of the request
         
-        // send the data to the server
-        const response = await updateWorkoutExerciseGroup(
+        const combinedData = {
             workoutId,
-            tableIndex,
-            parsedFormData
+            exerciseGroupId,
+            ...parsedFormData,
+        };
+
+        // make this json
+        const jsonData = JSON.stringify(combinedData);
+
+
+        // update the db via the api route - and use swr mutate to update the cache
+        // put request to /api/workouts/${workoutId}/exercise-groups/${exerciseGroupId}
+        const response = await fetch(
+            `/api/workouts`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: jsonData,
+            }
         );
-		
+        if (!response.ok) {
+            console.error("Failed to update exercise group");
+            return;
+        }
+        const data = await response.json();
+        console.log("Exercise group updated", data);
+        
+        // use swr to revalidate the data
+        // const { mutate } = useSWRConfig();
+        
+        // revalidate the workout data
+        // mutate(`/api/workouts/${workoutId}`);
+        
+        // revalidate the exercise group data
+        // mutate(`/api/workouts/${workoutId}/exercise-groups/${exerciseGroupId}`);
+        
+
+        
 	}
 
-	const handleInputChange = (
-		e: React.ChangeEvent<HTMLInputElement>,
-		setIndex: number,
-		field: string
-	) => {
-		const newValue = e.target.value;
-		console.log("newValue", newValue);
-		setFormData({
-			[`${tableKey}-${setIndex}-${field}`]: newValue,
-		});
-		console.log("Form data updated:", formData);
-	};
+	
 
 	return (
 		<div className={`container ${styles.exercise_group_table}`}>
@@ -159,14 +183,7 @@ export default function ExerciseGroupTable({
 											// name="weight"
 											name={`${setIndex}-weight`}
 											defaultValue={set.weight}
-											className='w-full border px-2 py-1'
-											onChange={(e) =>
-												handleInputChange(
-													e,
-													setIndex,
-													"weight"
-												)
-											}
+											className='w-full border px-2 py-1'											
 										/>
 									</td>
 									<td className='border px-4 py-2'>
@@ -175,14 +192,7 @@ export default function ExerciseGroupTable({
 											// name="reps"
 											name={`${setIndex}-reps`}
 											defaultValue={set.reps}
-											className='w-full border px-2 py-1'
-											onChange={(e) =>
-												handleInputChange(
-													e,
-													setIndex,
-													"reps"
-												)
-											}
+											className='w-full border px-2 py-1'											
 										/>
 									</td>
 									<td className='border px-4 py-2'>
@@ -191,14 +201,7 @@ export default function ExerciseGroupTable({
 											// name="notes"
 											name={`${setIndex}-notes`}
 											defaultValue={set.notes}
-											className='w-full border px-2 py-1'
-											onChange={(e) =>
-												handleInputChange(
-													e,
-													setIndex,
-													"notes"
-												)
-											}
+											className='w-full border px-2 py-1'											
 										/>
 									</td>
 								</tr>
