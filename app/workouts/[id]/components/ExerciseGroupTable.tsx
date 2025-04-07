@@ -4,7 +4,8 @@ import EditButton from "./EditButton";
 import AddSetButton from "./AddSetButton";
 import styles from "../styles/exercise-group-table.module.css";
 import parseFormData from "@/app/lib/parseFormData";
-import { addBlankSet } from "@/app/actions/workout";
+import { addBlankSet, deleteSet } from "@/app/actions/workout";
+import DeleteSetButton from "./DeleteSetButton";
 
 export default function ExerciseGroupTable({
 	tableKey,
@@ -77,6 +78,14 @@ export default function ExerciseGroupTable({
 		toggleEdit(tableKey);
 	}
 
+    const handleDeleteSet = async (setIndex: number) => {
+        // call server action to delete the set in db
+        await deleteSet(workoutId, tableKey.split("-").pop() || "0", setIndex);
+        // mutate the cache to trigger a revalidation
+        mutateExerciseGroup(); // trigger a revalidation of the SWR cache
+    }
+
+
 	return (
 		<div className={`container ${styles.exercise_group_table}`}>
 			<p>{title}</p>
@@ -140,6 +149,7 @@ export default function ExerciseGroupTable({
 											className='w-full border px-2 py-1'
 										/>
 									</td>
+                                    <DeleteSetButton handleDeleteSet={handleDeleteSet} setIndex={setIndex} /> {/* Placeholder for delete functionality */}                               
 								</tr>
 							))}
 						</tbody>
