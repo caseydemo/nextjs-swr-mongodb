@@ -1,10 +1,8 @@
 "use client";
 import WorkoutExerciseNotes from "./WorkoutExerciseNotes";
-import ActionButton from "./ActionButton";
+import EditButton from "./EditButton";
 import styles from "../styles/exercise-group-table.module.css";
-
-import { useReducer } from "react";
-
+import parseFormData from "@/app/lib/parseFormData";
 
 export default function ExerciseGroupTable({
 	tableKey,
@@ -14,7 +12,7 @@ export default function ExerciseGroupTable({
 	sets,
 	isEditing,
 	toggleEdit,
-    mutate,
+	mutate,
 }: {
 	tableKey: string;
 	workoutId: string;
@@ -27,27 +25,23 @@ export default function ExerciseGroupTable({
 	}[];
 	isEditing: boolean;
 	toggleEdit: (tableId: string) => void;
-    mutate: () => void; // function to mutate the SWR cache
+	mutate: () => void; // function to mutate the SWR cache
 }) {
-
-	const { mutate } = useSWRConfig();
 	const revalidationKey = `/api/workouts?workoutId=${workoutId}`;
 
 	async function handleFormSubmit(formData: FormData) {
-
-
 		// because the formData is in a weird unusable format by default, I need to parse it with my own logic
 		const parsedData = parseFormData(formData, tableKey);
-        if (!parsedData) {
+		if (!parsedData) {
 			console.error("Failed to parse form data");
 			return;
 		}
 
 		const { setsArray, exerciseGroupId } = parsedData;
-        if (!setsArray || !exerciseGroupId) {
-            console.error("Failed to parse form data");
-            return;
-        }
+		if (!setsArray || !exerciseGroupId) {
+			console.error("Failed to parse form data");
+			return;
+		}
 
 		const combinedData = {
 			workoutId,
@@ -55,46 +49,22 @@ export default function ExerciseGroupTable({
 			setsArray,
 		};
 
-
-		// optimistically load the new data?
+		// send the data to the server using a PUT request
 		try {
-
-            // Optimistically update the data (optional)
-            // mutate('/api/workouts', (cacheData: any) => {
-            //     // Update the cacheData based on newData
-            //     return updatedCacheData;
-            // }, false); // Prevent revalidation
-
-
-		// update the db via the api route - and use swr mutate to update the cache
-		// put request to /api/workouts/${workoutId}/exercise-groups/${exerciseGroupId}
-
-		const response = await fetch(`/api/workouts`, {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(combinedData);
-
-		});
-		if (response.ok) {
-			// Revalidate the data
-			console.log('telling all swrs to revalidate with this key')
-			mutate(revalidationKey);
-		} else {
-		   // Handle error and revert the optimistic update if necessary
-		   mutate(revalidationKey)
+			const response = await fetch(`/api/workouts`, {
+				method: "PUT",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(combinedData),
+			});
+			mutate();
+		} catch (error) {
+			console.error("Error updating workout:", error);
 		}
 
-		
-        // mutate the cache to update the workout data
-        mutate(); // this will re-fetch the data from the server and update the cache
-
-        // close the edit mode
-        toggleEdit(tableKey);
-        
-		
-
+		// close the edit mode
+		toggleEdit(tableKey);
 	}
 
 	return (
@@ -105,7 +75,7 @@ export default function ExerciseGroupTable({
 
 			{isEditing ? (
 				<form action={handleFormSubmit}>
-					<ActionButton
+					<EditButton
 						isEditing={isEditing}
 						toggleEdit={() => toggleEdit(tableKey)}
 					/>
@@ -173,7 +143,7 @@ export default function ExerciseGroupTable({
 				</form>
 			) : (
 				<>
-					<ActionButton
+					<EditButton
 						isEditing={isEditing}
 						toggleEdit={() => toggleEdit(tableKey)}
 					/>
