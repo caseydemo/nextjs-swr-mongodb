@@ -1,19 +1,19 @@
 "use client";
 
-import useWorkout from "@/app/hooks/useWorkout";
+import useFetchWorkout from "@/app/hooks/useFetchWorkout";
 import ExerciseGroupTable from "./ExerciseGroupTable";
 import WorkoutNotes from "./WorkoutNotes";
 import { useState } from "react";
 
 /*
     WorkoutTable component is responsible for displaying the workout data in a table format.
-    It fetches the workout data using the useWorkout hook, which uses SWR for data fetching.
+    It fetches the workout data using the useFetchWorkout hook, which uses SWR for data fetching.
     The component also handles the loading and error states, and displays the workout name, date, and notes.
 */
 export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 
 	// fetch workout data using SWR hook
-	const { data, error, isLoading } = useWorkout(workoutId);
+	const { data, error, isLoading, mutate } = useFetchWorkout(workoutId);
 
 	// create stateful variable for whether the row is being edited or not
 	const [editRows, setEditRows] = useState<Record<string, boolean>>({});	
@@ -67,6 +67,7 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 						sets={exerciseGroup.sets}
 						isEditing={editRows[`exercise-group-${index}`] || false} // check if the specific table is in edit mode
 						toggleEdit={toggleEdit}
+                        mutate={mutate} // pass the mutate function to the ExerciseGroupTable component
 					/>
 				</div>
 			))}

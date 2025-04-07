@@ -2,9 +2,8 @@
 import WorkoutExerciseNotes from "./WorkoutExerciseNotes";
 import ActionButton from "./ActionButton";
 import styles from "../styles/exercise-group-table.module.css";
-import parseFormData from "@/app/lib/parseFormData";
-import { useSWRConfig } from 'swr';
 
+import { useReducer } from "react";
 
 
 export default function ExerciseGroupTable({
@@ -15,6 +14,7 @@ export default function ExerciseGroupTable({
 	sets,
 	isEditing,
 	toggleEdit,
+    mutate,
 }: {
 	tableKey: string;
 	workoutId: string;
@@ -27,6 +27,7 @@ export default function ExerciseGroupTable({
 	}[];
 	isEditing: boolean;
 	toggleEdit: (tableId: string) => void;
+    mutate: () => void; // function to mutate the SWR cache
 }) {
 
 	const { mutate } = useSWRConfig();
@@ -42,11 +43,12 @@ export default function ExerciseGroupTable({
 			return;
 		}
 
-
-		// we receive back two values: setsArray and exerciseGroupId
 		const { setsArray, exerciseGroupId } = parsedData;
+        if (!setsArray || !exerciseGroupId) {
+            console.error("Failed to parse form data");
+            return;
+        }
 
-		// combine all three in an object to be sent off to the update endpoint
 		const combinedData = {
 			workoutId,
 			exerciseGroupId,
@@ -63,20 +65,17 @@ export default function ExerciseGroupTable({
             //     return updatedCacheData;
             // }, false); // Prevent revalidation
 
-			mutate(revalidationKey)
 
-		} catch (error) {
-            // Handle error and revert the optimistic update if necessary
-            mutate(revalidationKey)
-        }
+		// update the db via the api route - and use swr mutate to update the cache
+		// put request to /api/workouts/${workoutId}/exercise-groups/${exerciseGroupId}
 
-		// call the update endpoint
 		const response = await fetch(`/api/workouts`, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify(combinedData)
+			body: JSON.stringify(combinedData);
+
 		});
 		if (response.ok) {
 			// Revalidate the data
@@ -86,6 +85,15 @@ export default function ExerciseGroupTable({
 		   // Handle error and revert the optimistic update if necessary
 		   mutate(revalidationKey)
 		}
+
+		
+        // mutate the cache to update the workout data
+        mutate(); // this will re-fetch the data from the server and update the cache
+
+        // close the edit mode
+        toggleEdit(tableKey);
+        
+		
 
 	}
 
