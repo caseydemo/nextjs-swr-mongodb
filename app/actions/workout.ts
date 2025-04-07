@@ -71,3 +71,68 @@ export async function deleteSet(workoutId: string, exerciseGroupIndex: string, s
         throw new Error("Failed to update workout in deleteSet action");
     }
 }
+
+
+export async function deleteExerciseGroup(workoutId: string, exerciseGroupIndex: string) {
+    // first make sure we've got the required fields
+    if (!workoutId || !exerciseGroupIndex) {
+        throw new Error("Missing required fields in deleteExerciseGroup action");
+    }
+
+    await dbConnect();
+
+    // then grab the workout from the database
+    const existingWorkout = await getWorkoutById(workoutId);
+    if (!existingWorkout) {
+        throw new Error("Workout not found in deleteExerciseGroup action");
+    }
+
+    // remove the exercise group at the specified index from the exercises array
+    existingWorkout.exercises.splice(parseInt(exerciseGroupIndex), 1);
+
+    // mark the exercises array as modified
+    existingWorkout.markModified(`exercises`);
+
+    // save the workout back to the database
+    const updatedWorkout = await existingWorkout.save();
+    if (!updatedWorkout) {
+        throw new Error("Failed to update workout in deleteExerciseGroup action");
+    }
+}
+
+export async function addExerciseGroup(workoutId: string) {
+    
+    if(!workoutId) {
+        throw new Error("Missing required fields in addExerciseGroup action");
+    }
+
+    await dbConnect();
+
+    // then grab the workout from the database
+    const existingWorkout = await getWorkoutById(workoutId);
+    if (!existingWorkout) {
+        throw new Error("Workout not found in addExerciseGroup action");
+    }
+    // add a new exercise group to the exercises array
+    existingWorkout.exercises.push({
+        name: "New Exercise Group",
+        notes: "",
+        sets: [
+            {
+                weight: 0,
+                reps: 0,
+                notes: "",
+            },
+        ],
+    });
+
+    // mark the exercises array as modified
+    existingWorkout.markModified(`exercises`);
+
+    // save the workout back to the database
+    const updatedWorkout = await existingWorkout.save();
+    if (!updatedWorkout) {
+        throw new Error("Failed to update workout in addExerciseGroup action");
+    }
+
+}

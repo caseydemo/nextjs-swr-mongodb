@@ -4,8 +4,13 @@ import EditButton from "./EditButton";
 import AddSetButton from "./AddSetButton";
 import styles from "../styles/exercise-group-table.module.css";
 import parseFormData from "@/app/lib/parseFormData";
-import { addBlankSet, deleteSet } from "@/app/actions/workout";
+import {
+	addBlankSet,
+	deleteSet,
+	deleteExerciseGroup,
+} from "@/app/actions/workout";
 import DeleteSetButton from "./DeleteSetButton";
+import DeleteExerciseGroupButton from "./DeleteExerciseGroupButton";
 
 export default function ExerciseGroupTable({
 	tableKey,
@@ -29,17 +34,16 @@ export default function ExerciseGroupTable({
 	isEditing: boolean;
 	toggleEdit: (tableId: string) => void;
 	mutateExerciseGroup: () => void; // function to mutate the SWR cache
-}) {	
-
-	// add a new row to the exercise group table
-	// the new row represents a set of the exercise - reps, weight, notes
+}) {
+	// ADD BLANK SET
 	const handleAddSet = async () => {
-        // the index is the last part of the tablekey, prepended by a dash ex  exercise-group-0 - index is 0
-        const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
-        await addBlankSet(workoutId, exerciseGroupIndex); // add a blank set to the database
-        mutateExerciseGroup(); // mutate the SWR cache to trigger a revalidation
+		// the index is the last part of the tablekey, prepended by a dash ex  exercise-group-0 - index is 0
+		const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
+		await addBlankSet(workoutId, exerciseGroupIndex); // add a blank set to the database
+		mutateExerciseGroup(); // mutate the SWR cache to trigger a revalidation
 	};
 
+	// EDIT EXERCISE GROUP
 	async function handleEditExerciseGroup(formData: FormData) {
 		// because the formData is in a weird unusable format by default, I need to parse it with my own logic
 		const parsedData = parseFormData(formData, tableKey);
@@ -78,13 +82,22 @@ export default function ExerciseGroupTable({
 		toggleEdit(tableKey);
 	}
 
-    const handleDeleteSet = async (setIndex: number) => {
-        // call server action to delete the set in db
-        await deleteSet(workoutId, tableKey.split("-").pop() || "0", setIndex);
-        // mutate the cache to trigger a revalidation
-        mutateExerciseGroup(); // trigger a revalidation of the SWR cache
-    }
+	// refactor the delete set function to use global mutate function so we can optimistically update the UI
+	const handleDeleteSet = async (setIndex: number) => {
+		const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
+		await deleteSet(workoutId, exerciseGroupIndex, setIndex); // delete the set from the database
+		mutateExerciseGroup(); // trigger a revalidation of the SWR cache
+		toggleEdit(tableKey); // close the edit mode
+	};
 
+	// DELETE EXERCISE GROUP
+	const handleDeleteExerciseGroup = async () => {
+		// send the data to the server using a DELETE request
+		const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
+		await deleteExerciseGroup(workoutId, exerciseGroupIndex); // delete the exercise group from the database
+		mutateExerciseGroup(); // trigger a revalidation of the SWR cache
+		toggleEdit(tableKey); // close the edit mode
+	};
 
 	return (
 		<div className={`container ${styles.exercise_group_table}`}>
@@ -94,16 +107,23 @@ export default function ExerciseGroupTable({
 
 			{isEditing ? (
 				<form action={handleEditExerciseGroup}>
-					<EditButton
-						isEditing={isEditing}
-						toggleEdit={() => toggleEdit(tableKey)}
-					/>
-					<AddSetButton handleAddSet={handleAddSet} />
 					<input
 						type='hidden'
 						name='tableKey'
 						value={tableKey}
 					/>
+
+					<EditButton
+						isEditing={isEditing}
+						toggleEdit={() => toggleEdit(tableKey)}
+					/>
+
+					<AddSetButton handleAddSet={handleAddSet} />
+
+					<DeleteExerciseGroupButton
+						handleDeleteExerciseGroup={handleDeleteExerciseGroup}
+					/>
+
 					<table
 						className='w-full border border-gray-300 mt-2'
 						id={`exercise-group-table-${title}`}
@@ -114,6 +134,11 @@ export default function ExerciseGroupTable({
 								<th className='border px-4 py-2'>Weight</th>
 								<th className='border px-4 py-2'>Reps</th>
 								<th className='border px-4 py-2'>Notes</th>
+								{isEditing && (
+									<th className='border px-4 py-2'>
+										Actions
+									</th>
+								)}
 							</tr>
 						</thead>
 						<tbody>
@@ -149,12 +174,16 @@ export default function ExerciseGroupTable({
 											className='w-full border px-2 py-1'
 										/>
 									</td>
-                                    <DeleteSetButton handleDeleteSet={handleDeleteSet} setIndex={setIndex} /> {/* Placeholder for delete functionality */}                               
+									<td className='border px-4 py-2'>
+										<DeleteSetButton
+											handleDeleteSet={handleDeleteSet}
+											setIndex={setIndex}
+										/>
+									</td>
 								</tr>
 							))}
 						</tbody>
 					</table>
-
 					<button
 						className='bg-blue-500 text-white px-4 py-2 rounded mt-2'
 						type='submit'
