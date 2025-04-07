@@ -1,8 +1,10 @@
 "use client";
 import WorkoutExerciseNotes from "./WorkoutExerciseNotes";
 import EditButton from "./EditButton";
+import AddSetButton from "./AddSetButton";
 import styles from "../styles/exercise-group-table.module.css";
 import parseFormData from "@/app/lib/parseFormData";
+import { addBlankSet } from "@/app/actions/workout";
 
 export default function ExerciseGroupTable({
 	tableKey,
@@ -12,7 +14,7 @@ export default function ExerciseGroupTable({
 	sets,
 	isEditing,
 	toggleEdit,
-	mutate,
+	mutateExerciseGroup,
 }: {
 	tableKey: string;
 	workoutId: string;
@@ -25,11 +27,19 @@ export default function ExerciseGroupTable({
 	}[];
 	isEditing: boolean;
 	toggleEdit: (tableId: string) => void;
-	mutate: () => void; // function to mutate the SWR cache
-}) {
-	const revalidationKey = `/api/workouts?workoutId=${workoutId}`;
+	mutateExerciseGroup: () => void; // function to mutate the SWR cache
+}) {	
 
-	async function handleFormSubmit(formData: FormData) {
+	// add a new row to the exercise group table
+	// the new row represents a set of the exercise - reps, weight, notes
+	const handleAddSet = async () => {
+        // the index is the last part of the tablekey, prepended by a dash ex  exercise-group-0 - index is 0
+        const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
+        await addBlankSet(workoutId, exerciseGroupIndex); // add a blank set to the database
+        mutateExerciseGroup(); // mutate the SWR cache to trigger a revalidation
+	};
+
+	async function handleEditExerciseGroup(formData: FormData) {
 		// because the formData is in a weird unusable format by default, I need to parse it with my own logic
 		const parsedData = parseFormData(formData, tableKey);
 		if (!parsedData) {
@@ -51,14 +61,14 @@ export default function ExerciseGroupTable({
 
 		// send the data to the server using a PUT request
 		try {
-			const response = await fetch(`/api/workouts`, {
+			await fetch(`/api/workouts`, {
 				method: "PUT",
 				headers: {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify(combinedData),
 			});
-			mutate();
+			mutateExerciseGroup();
 		} catch (error) {
 			console.error("Error updating workout:", error);
 		}
@@ -74,11 +84,12 @@ export default function ExerciseGroupTable({
 			<WorkoutExerciseNotes notes={notes} />
 
 			{isEditing ? (
-				<form action={handleFormSubmit}>
+				<form action={handleEditExerciseGroup}>
 					<EditButton
 						isEditing={isEditing}
 						toggleEdit={() => toggleEdit(tableKey)}
 					/>
+					<AddSetButton handleAddSet={handleAddSet} />
 					<input
 						type='hidden'
 						name='tableKey'
@@ -147,6 +158,7 @@ export default function ExerciseGroupTable({
 						isEditing={isEditing}
 						toggleEdit={() => toggleEdit(tableKey)}
 					/>
+					<AddSetButton handleAddSet={handleAddSet} />
 
 					<table
 						className='w-full border border-gray-300 mt-2'

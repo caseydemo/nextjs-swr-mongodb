@@ -38,10 +38,7 @@ export async function GET(request: Request) {
 	}
 }
 
-// PUT request to update a workout
-// the request body contains the updated data for the exercise group
-// the parameter is a single json object with the following properties:
-// workoutId, exerciseGroupId, and the updated data for the exercise group
+
 export async function PUT(request: Request) {
 	try {
 		// pull out the parts of the body
@@ -89,15 +86,6 @@ export async function PUT(request: Request) {
 		// this updates the db, we will also need to update the cache in the frontend
 		await workout.save();
 		
-        // Revalidate the data using SWR mutate
-
-        // Revalidate the cache for the specific workout
-        // const { mutate } = useSWRConfig();
-        // This will re-fetch the data for the workout with the given workoutId
-        // mutate(`/api/workouts?workoutId=${workoutId}`);
-        
-        
-        
         return NextResponse.json(
 			{ message: "Exercise group updated" },
 			{ status: 200 }

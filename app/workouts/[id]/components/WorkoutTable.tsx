@@ -46,6 +46,8 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 		}));
 	};
 
+    
+
 	return (
 		<>
 			<h2>Workout: {workout.name}</h2>
@@ -67,7 +69,7 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 						sets={exerciseGroup.sets}
 						isEditing={editRows[`exercise-group-${index}`] || false} // check if the specific table is in edit mode
 						toggleEdit={toggleEdit}
-                        mutate={mutate} // pass the mutate function to the ExerciseGroupTable component
+                        mutateExerciseGroup={mutate} // pass the mutate function to the ExerciseGroupTable component
 					/>
 				</div>
 			))}
