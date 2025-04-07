@@ -1,7 +1,7 @@
-import useSWR, { useSWRConfig } from 'swr';
+import useSWR from 'swr';
 import fetcher from "@/app/lib/fetcher";
-export default function useWorkout(workoutId: string) {
-    const { data, error, isLoading } = useSWR(
+export default function useFetchWorkout(workoutId: string) {
+    const { data, error, isLoading, mutate } = useSWR(
         `/api/workouts?workoutId=${workoutId}`,
         fetcher
     );
@@ -10,5 +10,6 @@ export default function useWorkout(workoutId: string) {
         data,
         error,
         isLoading,
+        mutate,
     }
 }

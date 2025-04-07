@@ -3,8 +3,6 @@ import WorkoutExerciseNotes from "./WorkoutExerciseNotes";
 import ActionButton from "./ActionButton";
 import styles from "../styles/exercise-group-table.module.css";
 import { useReducer } from "react";
-import useSWR, { useSWRConfig } from "swr";
-
 
 export default function ExerciseGroupTable({
 	tableKey,
@@ -14,6 +12,7 @@ export default function ExerciseGroupTable({
 	sets,
 	isEditing,
 	toggleEdit,
+    mutate,
 }: {
 	tableKey: string;
 	workoutId: string;
@@ -26,6 +25,7 @@ export default function ExerciseGroupTable({
 	}[];
 	isEditing: boolean;
 	toggleEdit: (tableId: string) => void;
+    mutate: () => void; // function to mutate the SWR cache
 }) {
 	// stateful variable for form data
 	const [formData, setFormData] = useReducer(
@@ -94,23 +94,15 @@ export default function ExerciseGroupTable({
 			return;
 		}
 		const { setsArray, exerciseGroupId } = parsedData;
-
-        console.log('setsArray', setsArray);        
-
-		// console.log('setsArray', setsArray);
-		// console.log('exerciseGroupId', exerciseGroupId);
-		// console.log('workoutId', workoutId);
-
-		// combine all three values into a single object and send as the body of the request
-
+        if (!setsArray || !exerciseGroupId) {
+            console.error("Failed to parse form data");
+            return;
+        }
 		const combinedData = {
 			workoutId,
 			exerciseGroupId,
 			setsArray,
 		};        
-
-		// make this json
-		const jsonData = JSON.stringify(combinedData);
 
 		// update the db via the api route - and use swr mutate to update the cache
 		// put request to /api/workouts/${workoutId}/exercise-groups/${exerciseGroupId}
@@ -119,19 +111,18 @@ export default function ExerciseGroupTable({
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: jsonData,
+			body: JSON.stringify(combinedData);
 		});
 		if (!response.ok) {
 			console.error("Failed to update exercise group");
 			return;
 		}
-		const data = await response.json();
+		
+        // mutate the cache to update the workout data
+        mutate(); // this will re-fetch the data from the server and update the cache
 
-		if (!data) {
-            console.error("Failed to update exercise group");
-            return;
-        }
-
+        // close the edit mode
+        toggleEdit(tableKey);
         
 		
 	}
