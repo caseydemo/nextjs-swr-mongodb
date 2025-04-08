@@ -40,7 +40,7 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 
 	let exercises = [];
 	try {
-		exercises = workout.exercises;
+		exercises = workout.exercises;        
 	} catch (error) {
 		console.error("Error processing workout exercises:", error);
 		return <div>Failed to process workout exercises</div>;
@@ -93,8 +93,13 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
             exercises: [...workout.exercises, blankExerciseGroup], // add the blank exercise group to the workout data
         };        
 
+        const options = {
+            revalidate: false, // don't revalidate the data after the update
+            rollbackOnError: true, // rollback the data on error
+        }
+
         // use mutate to optimistically update the workout data
-        mutate(`/api/workouts?workoutId=${workoutId}`, optimisticData, false); // optimistically update the workout data
+        mutate(`/api/workouts?workoutId=${workoutId}`, optimisticData, options); // optimistically update the workout data
             
         // call the addExerciseGroup action to add a new exercise group to the database
         await addExerciseGroup(workoutId, selectedExerciseId); // call the addExerciseGroup action to add a new exercise group
@@ -126,7 +131,9 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 			</div>
 
 			{/* loop over exercises, create a seperate table for each exercise group */}
-			{exercises.map((exerciseGroup: any, index: number) => (
+
+            {exercises.map((exerciseGroup: any, index: number) => (
+                
 				<div
 					key={`exercise-group-${index}`}
 					className='mt-4'
