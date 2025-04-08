@@ -1,7 +1,7 @@
 "use server";
 import Workout from "../models/Workout";
+import Exercise from "../models/Exercise";
 import dbConnect from "@/app/lib/db";
-import useFetchExercise from "@/app/hooks/useFetchExercise";
 
 async function getWorkoutById(workoutId: string) {
     await dbConnect();
@@ -9,7 +9,7 @@ async function getWorkoutById(workoutId: string) {
     const workout = await Workout.findOne({ workoutId: workoutId });
     if (!workout) {
         throw new Error("Workout not found in getWorkoutById action");
-    }
+    }    
     return workout;
 }
 
@@ -116,9 +116,16 @@ export async function addExerciseGroup(workoutId: string, exerciseId: string) {
         throw new Error("Workout not found in addExerciseGroup action");
     }
 
+
+    // get the exercise by id using the Exercise model
+    const exercise = await Exercise.findById(exerciseId); // this is the correct way to get the exercise by id using Mongoose
+    if (!exercise) {
+        console.error('exerciseId: ', exerciseId); // log the exerciseId to the console
+        throw new Error("Exercise not found in addExerciseGroup action");
+    }
     // add a new exercise group to the exercises array
     existingWorkout.exercises.push({
-        name: "New Exercise Group",
+        name: exercise.name, // default name for the new exercise group
         notes: "",
         sets: [
             {

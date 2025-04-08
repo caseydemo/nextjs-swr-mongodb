@@ -3,10 +3,11 @@
 import useFetchWorkout from "@/app/hooks/useFetchWorkout";
 import ExerciseGroupTable from "./ExerciseGroupTable";
 import WorkoutNotes from "./WorkoutNotes";
-import { useState } from "react";
 import AddExerciseGroupButton from "./AddExerciseGroupButton";
-import { addExerciseGroup } from "@/app/actions/workout";
 import ExerciseDropdown from "./ExerciseDropdown";
+import { addExerciseGroup } from "@/app/actions/workout";
+import { useState } from "react";
+
 
 
 /*
@@ -35,9 +36,7 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	const workout = data?.workout ? data.workout : data; // check if workout is in the data object, if not just use the data object
 	if (!workout) {
 		throw new Error("No data found in the workout object");
-	} else {
-        console.log('this is the workout data', data) // log the workout data to the console
-    }
+	}
 
 	let exercises = [];
 	try {
@@ -61,11 +60,11 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
         if (!selectedExerciseId) {
             alert("Please select an exercise before adding a new exercise group.");
             return;
-        }
-        // optimistically update the ui by calling the update function from mutate
+        }        
 
+        // optimistically update the ui by calling the update function from mutate
         const blankExerciseGroup = {
-            name: "New Exercise Group",
+            name: "New Exercise Group", // default name for the new exercise group
             notes: "",
             sets: [
                 {

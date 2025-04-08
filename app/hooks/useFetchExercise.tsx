@@ -2,8 +2,10 @@ import useSWR from 'swr';
 import fetcher from '@/app/lib/fetcher';
 export default function useFetchExercise(exerciseId?: string) {    
     
+    const url = exerciseId ? `/api/exercises?exerciseId=${exerciseId}` : '/api/exercises';
+
     const { data, error, isLoading, mutate } = useSWR(
-        `/api/exercises?exerciseId=${exerciseId}`,
+        url,
         fetcher
     );
     
