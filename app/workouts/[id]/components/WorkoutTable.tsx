@@ -8,12 +8,14 @@ import AddExerciseGroupButton from "./AddExerciseGroupButton";
 import { addExerciseGroup } from "@/app/actions/workout";
 import ExerciseDropdown from "./ExerciseDropdown";
 
+
 /*
     WorkoutTable component is responsible for displaying the workout data in a table format.
     It fetches the workout data using the useFetchWorkout hook, which uses SWR for data fetching.
     The component also handles the loading and error states, and displays the workout name, date, and notes.
 */
 export default function WorkoutTable({ workoutId }: { workoutId: string }) {
+    
 	// fetch workout data using SWR hook
 	const { data, error, isLoading, mutate } = useFetchWorkout(workoutId);
 
@@ -29,14 +31,17 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	if (!data) return <div>No data found</div>;
 
 	// handle the case where the workout is not found
-	const workout = data?.workout;
+    // data is either data.workout or just data
+	const workout = data?.workout ? data.workout : data; // check if workout is in the data object, if not just use the data object
 	if (!workout) {
 		throw new Error("No data found in the workout object");
-	}
+	} else {
+        console.log('this is the workout data', data) // log the workout data to the console
+    }
 
 	let exercises = [];
 	try {
-		exercises = workout.exercises;
+		exercises = workout.exercises;        
 	} catch (error) {
 		console.error("Error processing workout exercises:", error);
 		return <div>Failed to process workout exercises</div>;
@@ -57,15 +62,55 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
             alert("Please select an exercise before adding a new exercise group.");
             return;
         }
+        // optimistically update the ui by calling the update function from mutate
+
+        const blankExerciseGroup = {
+            name: "New Exercise Group",
+            notes: "",
+            sets: [
+                {
+                    reps: 0,
+                    weight: 0,
+                    notes: ""
+                },
+                {
+                    reps: 0,
+                    weight: 0,
+                    notes: ""
+                },
+                {
+                    reps: 0,
+                    weight: 0,
+                    notes: ""
+                },
+            ],
+        }; // create a blank exercise group object
 
 
+        // add the blank exercise group to the workout data
+        // this is used to optimistically update the UI before the actual data is fetched
+        const optimisticData = {
+            ...workout,
+            exercises: [...workout.exercises, blankExerciseGroup], // add the blank exercise group to the workout data
+        };        
+
+        const options = {
+            revalidate: false, // don't revalidate the data after the update
+            rollbackOnError: true, // rollback the data on error
+        }
+
+        // use mutate to optimistically update the workout data
+        mutate(`/api/workouts?workoutId=${workoutId}`, optimisticData, options); // optimistically update the workout data
+            
+        // call the addExerciseGroup action to add a new exercise group to the database
         await addExerciseGroup(workoutId, selectedExerciseId); // call the addExerciseGroup action to add a new exercise group
-        mutate(); // revalidate the data to reflect the changes        
+                
+        // use mutate to revalidate the workout data
+        mutate(`/api/workouts?workoutId=${workoutId}`); // revalidate the workout data
     }
 
     const handleExerciseDropdown = async (exerciseId: string) => {
         setSelectedExerciseId(exerciseId); // set the selected exercise ID in state
-        console.log('Exercise ID:', exerciseId); // log the selected exercise ID
     }
         
 	return (
@@ -87,7 +132,9 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 			</div>
 
 			{/* loop over exercises, create a seperate table for each exercise group */}
-			{exercises.map((exerciseGroup: any, index: number) => (
+
+            {exercises.map((exerciseGroup: any, index: number) => (
+                
 				<div
 					key={`exercise-group-${index}`}
 					className='mt-4'
@@ -99,8 +146,7 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 						notes={exerciseGroup.notes}
 						sets={exerciseGroup.sets}
 						isEditing={editRows[`exercise-group-${index}`] || false} // check if the specific table is in edit mode
-						toggleEdit={toggleEdit}
-						mutateExerciseGroup={mutate} // pass the mutate function to the ExerciseGroupTable component
+						toggleEdit={toggleEdit}						
 					/>
 				</div>
 			))}
