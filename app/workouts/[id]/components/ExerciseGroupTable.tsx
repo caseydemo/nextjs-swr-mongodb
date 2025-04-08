@@ -11,6 +11,7 @@ import {
 } from "@/app/actions/workout";
 import DeleteSetButton from "./DeleteSetButton";
 import DeleteExerciseGroupButton from "./DeleteExerciseGroupButton";
+import { mutate } from "swr";
 
 export default function ExerciseGroupTable({
 	tableKey,
@@ -37,7 +38,8 @@ export default function ExerciseGroupTable({
 	const handleAddSet = async () => {
 		// the index is the last part of the tablekey, prepended by a dash ex  exercise-group-0 - index is 0
 		const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
-		await addBlankSet(workoutId, exerciseGroupIndex); // add a blank set to the database		
+        await addBlankSet(workoutId, exerciseGroupIndex); // add a blank set to the database	
+        mutate(`/api/workouts?workoutId=${workoutId}`); // revalidate the workout data        
 	};
 
 	// EDIT EXERCISE GROUP
@@ -83,6 +85,7 @@ export default function ExerciseGroupTable({
 		const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
 		await deleteSet(workoutId, exerciseGroupIndex, setIndex); // delete the set from the database		
 		toggleEdit(tableKey); // close the edit mode
+        mutate(`/api/workouts?workoutId=${workoutId}`); // revalidate the workout data
 	};
 
 	// DELETE EXERCISE GROUP
@@ -91,6 +94,7 @@ export default function ExerciseGroupTable({
 		const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
 		await deleteExerciseGroup(workoutId, exerciseGroupIndex); // delete the exercise group from the database
 		toggleEdit(tableKey); // close the edit mode
+        mutate(`/api/workouts?workoutId=${workoutId}`); // revalidate the workout data
 	};
 
 	return (

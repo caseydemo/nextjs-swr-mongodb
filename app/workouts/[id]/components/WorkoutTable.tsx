@@ -15,6 +15,7 @@ import ExerciseDropdown from "./ExerciseDropdown";
     The component also handles the loading and error states, and displays the workout name, date, and notes.
 */
 export default function WorkoutTable({ workoutId }: { workoutId: string }) {
+    
 	// fetch workout data using SWR hook
 	const { data, error, isLoading, mutate } = useFetchWorkout(workoutId);
 
