@@ -5,6 +5,7 @@ import ExerciseGroupTable from "./ExerciseGroupTable";
 import WorkoutNotes from "../WorkoutNotes";
 import AddExerciseGroupButton from "../buttons/AddExerciseGroupButton";
 import ExerciseDropdown from "../ExerciseDropdown";
+import WorkoutDate from "../WorkoutDate";
 import { addExerciseGroup } from "@/app/actions/workout";
 import { useState } from "react";
 import Card from "@/app/components/Card";
@@ -25,6 +26,8 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(
 		null
 	);
+
+    const [dateIsEditing, setDateIsEditing] = useState(false); // state for date editing
 
 	// handle loading and error states
 	if (isLoading) return <div>Loading...</div>;
@@ -113,6 +116,12 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 		setSelectedExerciseId(exerciseId); // set the selected exercise ID in state
 	};
 
+    const handleDateEdit = async () => {
+        // handle the date edit functionality here
+        // this is a placeholder for the date edit functionality
+        console.log("Date edit functionality not implemented yet.");
+    }
+
 	return (
 		<>
 			<Card
@@ -120,7 +129,7 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 				className='mb-4'
 			>
 				<div className=''>
-					<div className='alert alert-info'>Date: {workout.started}</div>
+					<WorkoutDate started={workout.started} isEditing={dateIsEditing} handleDateEdit={handleDateEdit} />
 					<div className='callout callout-info'>
 						<WorkoutNotes notes={workout.notes} />
 					</div>
@@ -131,7 +140,7 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 					/>
 					<ExerciseDropdown
 						handleExerciseDropdown={handleExerciseDropdown}
-					/>{" "}
+					/>
 					{/* This is a placeholder for the ExerciseDropdown component */}
 				</div>
 			</Card>
