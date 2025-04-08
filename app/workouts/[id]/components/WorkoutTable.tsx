@@ -6,6 +6,7 @@ import WorkoutNotes from "./WorkoutNotes";
 import { useState } from "react";
 import AddExerciseGroupButton from "./AddExerciseGroupButton";
 import { addExerciseGroup } from "@/app/actions/workout";
+import ExerciseDropdown from "./ExerciseDropdown";
 
 /*
     WorkoutTable component is responsible for displaying the workout data in a table format.
@@ -18,6 +19,9 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 
 	// create stateful variable for whether the row is being edited or not
 	const [editRows, setEditRows] = useState<Record<string, boolean>>({});
+
+    // create a stateful variable for the selected exercise ID
+    const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
 
 	// handle loading and error states
 	if (isLoading) return <div>Loading...</div>;
@@ -48,8 +52,20 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 	};
 
     const handleAddExerciseGroup = async () => {
-        await addExerciseGroup(workoutId); // call the addExerciseGroup action to add a new exercise group
+        // prevent this from working if user has not selected an exercise
+        if (!selectedExerciseId) {
+            alert("Please select an exercise before adding a new exercise group.");
+            return;
+        }
+
+
+        await addExerciseGroup(workoutId, selectedExerciseId); // call the addExerciseGroup action to add a new exercise group
         mutate(); // revalidate the data to reflect the changes        
+    }
+
+    const handleExerciseDropdown = async (exerciseId: string) => {
+        setSelectedExerciseId(exerciseId); // set the selected exercise ID in state
+        console.log('Exercise ID:', exerciseId); // log the selected exercise ID
     }
         
 	return (
@@ -66,6 +82,7 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
                     <AddExerciseGroupButton 
                         onClick={handleAddExerciseGroup} // pass the handleAddExerciseGroup function to the button
                     />
+                    <ExerciseDropdown handleExerciseDropdown={handleExerciseDropdown} /> {/* This is a placeholder for the ExerciseDropdown component */}
                 </div>
 			</div>
 

@@ -1,6 +1,7 @@
 "use server";
 import Workout from "../models/Workout";
 import dbConnect from "@/app/lib/db";
+import useFetchExercise from "@/app/hooks/useFetchExercise";
 
 async function getWorkoutById(workoutId: string) {
     await dbConnect();
@@ -100,9 +101,9 @@ export async function deleteExerciseGroup(workoutId: string, exerciseGroupIndex:
     }
 }
 
-export async function addExerciseGroup(workoutId: string) {
-    
-    if(!workoutId) {
+export async function addExerciseGroup(workoutId: string, exerciseId: string) {
+
+    if(!workoutId || !exerciseId) {
         throw new Error("Missing required fields in addExerciseGroup action");
     }
 
@@ -113,11 +114,27 @@ export async function addExerciseGroup(workoutId: string) {
     if (!existingWorkout) {
         throw new Error("Workout not found in addExerciseGroup action");
     }
+
+    // we need to get the exercise data from the db, not sure tthe best way to do this yet? 
+    // guess I'll make a new action for it
+    
+    
+
     // add a new exercise group to the exercises array
     existingWorkout.exercises.push({
         name: "New Exercise Group",
         notes: "",
         sets: [
+            {
+                weight: 0,
+                reps: 0,
+                notes: "",
+            },
+            {
+                weight: 0,
+                reps: 0,
+                notes: "",
+            },
             {
                 weight: 0,
                 reps: 0,
