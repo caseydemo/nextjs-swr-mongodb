@@ -19,8 +19,7 @@ export default function ExerciseGroupTable({
 	notes,
 	sets,
 	isEditing,
-	toggleEdit,
-	mutateExerciseGroup,
+	toggleEdit,	
 }: {
 	tableKey: string;
 	workoutId: string;
@@ -33,14 +32,12 @@ export default function ExerciseGroupTable({
 	}[];
 	isEditing: boolean;
 	toggleEdit: (tableId: string) => void;
-	mutateExerciseGroup: () => void; // function to mutate the SWR cache
 }) {
 	// ADD BLANK SET
 	const handleAddSet = async () => {
 		// the index is the last part of the tablekey, prepended by a dash ex  exercise-group-0 - index is 0
 		const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
-		await addBlankSet(workoutId, exerciseGroupIndex); // add a blank set to the database
-		mutateExerciseGroup(); // mutate the SWR cache to trigger a revalidation
+		await addBlankSet(workoutId, exerciseGroupIndex); // add a blank set to the database		
 	};
 
 	// EDIT EXERCISE GROUP
@@ -72,8 +69,7 @@ export default function ExerciseGroupTable({
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify(combinedData),
-			});
-			mutateExerciseGroup();
+			});			
 		} catch (error) {
 			console.error("Error updating workout:", error);
 		}
@@ -82,11 +78,10 @@ export default function ExerciseGroupTable({
 		toggleEdit(tableKey);
 	}
 
-	// refactor the delete set function to use global mutate function so we can optimistically update the UI
+	
 	const handleDeleteSet = async (setIndex: number) => {
 		const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
-		await deleteSet(workoutId, exerciseGroupIndex, setIndex); // delete the set from the database
-		mutateExerciseGroup(); // trigger a revalidation of the SWR cache
+		await deleteSet(workoutId, exerciseGroupIndex, setIndex); // delete the set from the database		
 		toggleEdit(tableKey); // close the edit mode
 	};
 
@@ -95,7 +90,6 @@ export default function ExerciseGroupTable({
 		// send the data to the server using a DELETE request
 		const exerciseGroupIndex = tableKey.split("-").pop() || "0"; // get the last part of the tableKey
 		await deleteExerciseGroup(workoutId, exerciseGroupIndex); // delete the exercise group from the database
-		mutateExerciseGroup(); // trigger a revalidation of the SWR cache
 		toggleEdit(tableKey); // close the edit mode
 	};
 

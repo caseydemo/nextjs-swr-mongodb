@@ -101,6 +101,7 @@ export async function deleteExerciseGroup(workoutId: string, exerciseGroupIndex:
     }
 }
 
+// this makes an update to the db
 export async function addExerciseGroup(workoutId: string, exerciseId: string) {
 
     if(!workoutId || !exerciseId) {
@@ -114,11 +115,6 @@ export async function addExerciseGroup(workoutId: string, exerciseId: string) {
     if (!existingWorkout) {
         throw new Error("Workout not found in addExerciseGroup action");
     }
-
-    // we need to get the exercise data from the db, not sure tthe best way to do this yet? 
-    // guess I'll make a new action for it
-    
-    
 
     // add a new exercise group to the exercises array
     existingWorkout.exercises.push({
