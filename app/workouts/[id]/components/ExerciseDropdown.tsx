@@ -8,11 +8,11 @@ export default function ExerciseDropdown({ handleExerciseDropdown }: { handleExe
     
 
     return (
-        <div>
+        <div className="col-auto">
             {error && <p>Error loading exercises</p>}
             {isLoading && <p>Loading...</p>}
             
-            <select onChange={(e) => handleExerciseDropdown(e.target.value)}>
+            <select className="form-select" aria-label="Default select example">
                 <option value="">Select an exercise</option>
                 {exercises.map((exercise: { _id: string; name: string }) => (
                     <option key={exercise._id} value={exercise._id}>

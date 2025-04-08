@@ -1,16 +1,16 @@
 "use client";
-import WorkoutExerciseNotes from "./WorkoutExerciseNotes";
-import EditButton from "./EditButton";
-import AddSetButton from "./AddSetButton";
-import styles from "../styles/exercise-group-table.module.css";
+import WorkoutExerciseNotes from "../WorkoutExerciseNotes";
+import EditButton from "../buttons/EditButton";
+import AddSetButton from "../buttons/AddSetButton";
+import styles from "../../styles/exercise-group-table.module.css";
 import parseFormData from "@/app/lib/parseFormData";
 import {
 	addBlankSet,
 	deleteSet,
 	deleteExerciseGroup,
 } from "@/app/actions/workout";
-import DeleteSetButton from "./DeleteSetButton";
-import DeleteExerciseGroupButton from "./DeleteExerciseGroupButton";
+import DeleteSetButton from "../buttons/DeleteSetButton";
+import DeleteExerciseGroupButton from "../buttons/DeleteExerciseGroupButton";
 import { mutate } from "swr";
 
 export default function ExerciseGroupTable({

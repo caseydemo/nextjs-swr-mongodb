@@ -1,4 +1,4 @@
-import styles from "../styles/delete-exercise-group-button.module.css";
+import styles from "../../styles/delete-exercise-group-button.module.css";
 export default function DeleteExerciseGroupButton({    
     handleDeleteExerciseGroup,    
 }: {    

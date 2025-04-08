@@ -1,0 +1,14 @@
+.card {
+    width: 75%;
+    margin: auto;
+    margin-top: 50px;
+    border: 2px solid white;
+    border-radius: 10px;
+    padding: 30px;
+    .card_title {
+        font-size: 50px;
+        text-align: center;
+        margin-bottom: 50px;
+    }
+}
+
