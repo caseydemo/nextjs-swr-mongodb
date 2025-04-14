@@ -156,3 +156,62 @@ export async function addExerciseGroup(workoutId: string, exerciseId: string) {
     }
 
 }
+
+type CombinedDataType = {
+    workoutId: string;
+	exerciseGroupId: string;
+	setsArray: {
+        weight: number;
+        reps: number;
+        notes?: string;
+    }[];
+}
+
+// update exercise group data - refactoring from the api
+export async function updateExerciseGroup(combinedData: CombinedDataType) {
+	try {
+		// pull out the parts of the body
+		const params = await combinedData;
+
+		// should be three things: workoutId, exerciseGroupId, and the updated data for the exercise group
+		const { workoutId, exerciseGroupId, setsArray } = params;
+
+		// all three need to be there, throw a fit if they aint
+		if (!workoutId || !exerciseGroupId || !setsArray) {
+			throw new Error(
+                "Missing required fields in updateExerciseGroup action"
+            );
+		}
+
+		await dbConnect();
+
+		// find the workout by the field called workoutId
+		// const workout = await Workout.findOne({ workoutId });
+		const workout = await Workout.findOne({ workoutId: workoutId });
+		if (!workout) {
+			throw new Error("Workout not found in updateExerciseGroup action");
+		}
+
+		// find the exercise group's sets array - this is an array of objects
+		const exerciseGroupSets = workout.exercises[exerciseGroupId]?.sets;
+		if (!exerciseGroupSets) {
+			throw new Error(
+                "Exercise group not found in updateExerciseGroup action"
+            );
+		}
+		// update the exercise group's sets array with the updated data
+		// this will replace the entire sets array with the updated data
+		workout.exercises[exerciseGroupId].sets = setsArray;
+
+		// Mark the exercises array as modified
+		workout.markModified(`exercises.${exerciseGroupId}.sets`);
+
+		// ok... now that we have the data all set we need to save the workout
+		// this updates the db, we will also need to update the cache in the frontend
+		await workout.save();
+		        
+	} catch (error) {
+		console.error(error);
+		throw new Error("Failed to update exercise group in updateExerciseGroup action");
+	}
+}

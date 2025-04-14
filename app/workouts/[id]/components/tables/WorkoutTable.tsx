@@ -9,6 +9,8 @@ import WorkoutDate from "../WorkoutDate";
 import { addExerciseGroup } from "@/app/actions/workout";
 import { useState } from "react";
 import Card from "@/app/components/Card";
+import SummaryEditButton from "../buttons/SummaryEditButton";
+import WorkoutSummary from "../WorkoutSummary";
 
 /*
     WorkoutTable component is responsible for displaying the workout data in a table format.
@@ -128,7 +130,9 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 				title={`Workout - ${workout.workoutId}`}
 				className='mb-4'
 			>
-				<div className=''>
+				<WorkoutSummary /> {/* This is a placeholder for the WorkoutSummary component */}
+                
+                <div className=''>
 					<WorkoutDate started={workout.started} isEditing={dateIsEditing} handleDateEdit={handleDateEdit} />
 					<div className='callout callout-info'>
 						<WorkoutNotes notes={workout.notes} />
@@ -143,6 +147,7 @@ export default function WorkoutTable({ workoutId }: { workoutId: string }) {
 					/>
 					{/* This is a placeholder for the ExerciseDropdown component */}
 				</div>
+                
 			</Card>
 
 			{/* loop over exercises, create a seperate table for each exercise group */}

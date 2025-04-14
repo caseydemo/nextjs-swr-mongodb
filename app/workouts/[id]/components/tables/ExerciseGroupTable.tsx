@@ -8,6 +8,7 @@ import {
 	addBlankSet,
 	deleteSet,
 	deleteExerciseGroup,
+    updateExerciseGroup,
 } from "@/app/actions/workout";
 import DeleteSetButton from "../buttons/DeleteSetButton";
 import DeleteExerciseGroupButton from "../buttons/DeleteExerciseGroupButton";
@@ -43,6 +44,7 @@ export default function ExerciseGroupTable({
 	};
 
 	// EDIT EXERCISE GROUP
+    // CASEY YOU LEFT OFF HERE 4/14/25
 	async function handleEditExerciseGroup(formData: FormData) {
 		// because the formData is in a weird unusable format by default, I need to parse it with my own logic
 		const parsedData = parseFormData(formData, tableKey);
@@ -62,19 +64,12 @@ export default function ExerciseGroupTable({
 			exerciseGroupId,
 			setsArray,
 		};
-
-		// send the data to the server using a PUT request
-		try {
-			await fetch(`/api/workouts`, {
-				method: "PUT",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(combinedData),
-			});			
-		} catch (error) {
-			console.error("Error updating workout:", error);
-		}
+        
+        // without the entire workout object, I don't think I can use optimistic UI updates
+        await updateExerciseGroup(combinedData); // update the exercise group in the database
+        
+        // revalidate the workout data after the update
+        mutate(`/api/workouts?workoutId=${workoutId}`); // revalidate the workout data
 
 		// close the edit mode
 		toggleEdit(tableKey);
